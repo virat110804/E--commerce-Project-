@@ -1,0 +1,164 @@
+ -- Advanced SQL Queries --
+ -- Find the top 5 most expensive products --
+ SELECT *
+FROM (
+    SELECT
+        p.*,
+        RANK() OVER (ORDER BY price DESC) AS price_rank
+    FROM products p
+) x
+WHERE price_rank <= 5;
+
+-- Find the highest-priced product in every category --
+SELECT *
+FROM (
+    SELECT
+        p.id,
+        p.name,
+        p.category_id,
+        p.price,
+        RANK() OVER (
+            PARTITION BY p.category_id
+            ORDER BY p.price DESC
+        ) AS product_rank
+    FROM products p
+) x
+WHERE product_rank = 1;
+
+-- Find the total amount spent by each customer --
+SELECT
+    u.id,
+    u.name,
+    COALESCE(SUM(o.total_amount), 0) AS total_spent
+FROM users u
+LEFT JOIN orders o
+    ON u.id = o.user_id
+GROUP BY u.id, u.name
+ORDER BY total_spent DESC;
+
+-- Find the customer who spent the most money --
+ SELECT
+    u.id,
+    u.name,
+    SUM(o.total_amount) AS total_spent
+FROM users u
+JOIN orders o
+    ON u.id = o.user_id
+GROUP BY u.id, u.name
+ORDER BY total_spent DESC
+LIMIT 1;
+
+-- Find the most frequently purchased products --
+SELECT
+    p.id,
+    p.name,
+    SUM(oi.quantity) AS total_quantity_sold
+FROM products p
+JOIN order_items oi
+    ON p.id = oi.product_id
+JOIN orders o
+    ON oi.order_id = o.id
+WHERE o.status = 'Completed'
+GROUP BY p.id, p.name
+ORDER BY total_quantity_sold DESC;
+  
+-- Find customers who have never placed an order --
+SELECT
+    u.id,
+    u.name,
+    u.email
+FROM users u
+LEFT JOIN orders o
+    ON u.id = o.user_id
+WHERE o.id IS NULL;
+
+-- Find the second-highest spending customer --
+WITH customer_spending AS (
+    SELECT
+        u.id,
+        u.name,
+        SUM(o.total_amount) AS total_spent
+    FROM users u
+    JOIN orders o
+        ON u.id = o.user_id
+    GROUP BY u.id, u.name
+),
+ranked_customers AS (
+    SELECT
+        *,
+        DENSE_RANK() OVER (
+            ORDER BY total_spent DESC
+        ) AS spending_rank
+    FROM customer_spending
+)
+SELECT
+    id,
+    name,
+    total_spent
+FROM ranked_customers
+WHERE spending_rank = 2;
+
+-- Calculate monthly sales and compare with the previous month --
+WITH monthly_sales AS (
+    SELECT
+        EXTRACT(YEAR FROM order_date) AS year,
+        EXTRACT(MONTH FROM order_date) AS month,
+        SUM(total_amount) AS sales
+    FROM orders
+    WHERE status = 'Completed'
+    GROUP BY
+        EXTRACT(YEAR FROM order_date),
+        EXTRACT(MONTH FROM order_date)
+)
+SELECT
+    year,
+    month,
+    sales,
+    LAG(sales) OVER (
+        ORDER BY year, month
+    ) AS previous_month_sales,
+    sales - LAG(sales) OVER (
+        ORDER BY year, month
+    ) AS sales_difference
+FROM monthly_sales
+ORDER BY year, month;
+
+ -- Find each customer's most recent order --
+WITH ranked_orders AS (
+    SELECT
+        o.*,
+        ROW_NUMBER() OVER (
+            PARTITION BY user_id
+            ORDER BY order_date DESC
+        ) AS rn
+    FROM orders o
+)
+SELECT
+    u.name,
+    r.id AS order_id,
+    r.order_date,
+    r.total_amount,
+    r.status
+FROM ranked_orders r
+JOIN users u
+    ON r.user_id = u.id
+WHERE r.rn = 1;
+
+  -- Find products that have never been ordered --
+  SELECT
+    p.id,
+    p.name,
+    p.price,
+    p.stock
+FROM products p
+LEFT JOIN order_items oi
+    ON p.id = oi.product_id
+WHERE oi.product_id IS NULL;
+
+
+
+
+
+
+
+
