@@ -1,0 +1,415 @@
+CREATE DATABASE ecommerce_db;
+USE ecommerce_db;
+
+CREATE TABLE users (
+    user_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(150) UNIQUE,
+    phone VARCHAR(20),
+    created_at DATE
+);
+
+CREATE TABLE addresses (
+    address_id INT PRIMARY KEY,
+    user_id INT,
+    address_line VARCHAR(200),
+    city VARCHAR(50),
+    state VARCHAR(50),
+    pincode VARCHAR(10),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE categories (
+    category_id INT PRIMARY KEY,
+    category_name VARCHAR(100)
+);
+
+CREATE TABLE products (
+    product_id INT PRIMARY KEY,
+    category_id INT,
+    product_name VARCHAR(150),
+    price DECIMAL(10,2),
+    stock INT,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id)
+);
+
+CREATE TABLE cart (
+    cart_id INT PRIMARY KEY,
+    user_id INT,
+    created_at DATE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE cart_items (
+    cart_item_id INT PRIMARY KEY,
+    cart_id INT,
+    product_id INT,
+    quantity INT,
+    FOREIGN KEY (cart_id) REFERENCES cart(cart_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    user_id INT,
+    address_id INT,
+    order_date DATE,
+    total_amount DECIMAL(12,2),
+    status VARCHAR(30),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (address_id) REFERENCES addresses(address_id)
+);
+
+CREATE TABLE order_items (
+    order_item_id INT PRIMARY KEY,
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    price DECIMAL(10,2),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+CREATE TABLE payments (
+    payment_id INT PRIMARY KEY,
+    order_id INT,
+    payment_date DATE,
+    amount DECIMAL(12,2),
+    payment_method VARCHAR(30),
+    payment_status VARCHAR(30),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
+
+
+INSERT INTO categories (category_id, category_name)
+VALUES
+(1, 'Electronics'),
+(2, 'Mobiles'),
+(3, 'Laptops'),
+(4, 'Clothing'),
+(5, 'Footwear'),
+(6, 'Home Appliances'),
+(7, 'Furniture'),
+(8, 'Books'),
+(9, 'Beauty'),
+(10, 'Sports'),
+(11, 'Toys'),
+(12, 'Groceries'),
+(13, 'Jewellery'),
+(14, 'Watches'),
+(15, 'Bags'),
+(16, 'Kitchen'),
+(17, 'Automotive'),
+(18, 'Stationery'),
+(19, 'Gaming'),
+(20, 'Accessories'); 
+
+INSERT INTO users
+(user_id, name, email, phone, created_at)
+SELECT
+    n,
+    CONCAT('User ', n),
+    CONCAT('user', n, '@example.com'),
+    CONCAT('9', LPAD(n, 9, '0')),
+    DATE_ADD('2024-01-01', INTERVAL FLOOR(RAND() * 900) DAY)
+FROM (
+    SELECT
+        a.n +
+        b.n * 10 +
+        c.n * 100 +
+        d.n * 1000 +
+        1 AS n
+    FROM
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) d
+) numbers;
+
+INSERT INTO addresses
+(address_id, user_id, address_line, city, state, pincode)
+SELECT
+    n,
+    MOD(n - 1, 5000) + 1,
+    CONCAT('Street ', n),
+    CASE MOD(n, 10)
+        WHEN 0 THEN 'Chennai'
+        WHEN 1 THEN 'Bangalore'
+        WHEN 2 THEN 'Mumbai'
+        WHEN 3 THEN 'Delhi'
+        WHEN 4 THEN 'Hyderabad'
+        WHEN 5 THEN 'Pune'
+        WHEN 6 THEN 'Kolkata'
+        WHEN 7 THEN 'Coimbatore'
+        WHEN 8 THEN 'Madurai'
+        ELSE 'Jaipur'
+    END,
+    CASE MOD(n, 6)
+        WHEN 0 THEN 'Tamil Nadu'
+        WHEN 1 THEN 'Karnataka'
+        WHEN 2 THEN 'Maharashtra'
+        WHEN 3 THEN 'Delhi'
+        WHEN 4 THEN 'Telangana'
+        ELSE 'Rajasthan'
+    END,
+    LPAD(600000 + MOD(n, 400000), 6, '0')
+FROM (
+    SELECT
+        a.n +
+        b.n * 10 +
+        c.n * 100 +
+        d.n * 1000 +
+        e.n * 10000 +
+        1 AS n
+    FROM
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) e
+) numbers
+WHERE n <= 7000;
+
+INSERT INTO products
+(product_id, category_id, product_name, price, stock)
+SELECT
+    n,
+    MOD(n - 1, 20) + 1,
+    CONCAT('Product ', n),
+    ROUND(100 + RAND() * 49900, 2),
+    FLOOR(10 + RAND() * 500)
+FROM (
+    SELECT
+        a.n +
+        b.n * 10 +
+        c.n * 100 +
+        d.n * 1000 +
+        1 AS n
+    FROM
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+) numbers;
+
+INSERT INTO cart
+(cart_id, user_id, created_at)
+SELECT
+    n,
+    n,
+    DATE_ADD('2025-01-01', INTERVAL FLOOR(RAND() * 600) DAY)
+FROM (
+    SELECT
+        a.n +
+        b.n * 10 +
+        c.n * 100 +
+        d.n * 1000 +
+        1 AS n
+    FROM
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) d
+) numbers;
+
+INSERT INTO cart_items
+(cart_item_id, cart_id, product_id, quantity)
+SELECT
+    n,
+    MOD(n - 1, 5000) + 1,
+    MOD(n * 37, 2000) + 1,
+    MOD(n, 5) + 1
+FROM (
+    SELECT
+        a.n +
+        b.n * 10 +
+        c.n * 100 +
+        d.n * 1000 +
+        1 AS n
+    FROM
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+) numbers;
+
+INSERT INTO orders
+(order_id, user_id, address_id, order_date, total_amount, status)
+SELECT
+    n,
+    MOD(n - 1, 5000) + 1,
+    MOD(n - 1, 7000) + 1,
+    DATE_ADD('2025-01-01', INTERVAL FLOOR(RAND() * 600) DAY),
+    ROUND(500 + RAND() * 50000, 2),
+    CASE MOD(n, 5)
+        WHEN 0 THEN 'Delivered'
+        WHEN 1 THEN 'Shipped'
+        WHEN 2 THEN 'Processing'
+        WHEN 3 THEN 'Cancelled'
+        ELSE 'Delivered'
+    END
+FROM (
+    SELECT
+        a.n +
+        b.n * 10 +
+        c.n * 100 +
+        d.n * 1000 +
+        1 AS n
+    FROM
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+) numbers;
+
+INSERT INTO order_items
+(order_item_id, order_id, product_id, quantity, price)
+SELECT
+    n,
+    MOD(n - 1, 10000) + 1,
+    MOD(n * 17, 2000) + 1,
+    MOD(n, 5) + 1,
+    ROUND(100 + RAND() * 49900, 2)
+FROM (
+    SELECT
+        a.n +
+        b.n * 10 +
+        c.n * 100 +
+        d.n * 1000 +
+        e.n * 10000 +
+        1 AS n
+    FROM
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) e
+) numbers
+WHERE n <= 15000;
+
+INSERT INTO payments
+(payment_id, order_id, payment_date, amount, payment_method, payment_status)
+SELECT
+    n,
+    n,
+    DATE_ADD('2025-01-01', INTERVAL FLOOR(RAND() * 600) DAY),
+    o.total_amount,
+    CASE MOD(n, 4)
+        WHEN 0 THEN 'UPI'
+        WHEN 1 THEN 'Credit Card'
+        WHEN 2 THEN 'Debit Card'
+        ELSE 'Net Banking'
+    END,
+    CASE MOD(n, 10)
+        WHEN 0 THEN 'Failed'
+        WHEN 1 THEN 'Pending'
+        ELSE 'Completed'
+    END
+FROM (
+    SELECT
+        a.n +
+        b.n * 10 +
+        c.n * 100 +
+        d.n * 1000 +
+        1 AS n
+    FROM
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN
+        (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+         UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+) numbers
+JOIN orders o ON o.order_id = n;
+
+
+SELECT 'Users' AS table_name, COUNT(*) AS rows_count FROM users
+UNION ALL
+SELECT 'Addresses', COUNT(*) FROM addresses
+UNION ALL
+SELECT 'Categories', COUNT(*) FROM categories
+UNION ALL
+SELECT 'Products', COUNT(*) FROM products
+UNION ALL
+SELECT 'Cart', COUNT(*) FROM cart
+UNION ALL
+SELECT 'Cart Items', COUNT(*) FROM cart_items
+UNION ALL
+SELECT 'Orders', COUNT(*) FROM orders
+UNION ALL
+SELECT 'Order Items', COUNT(*) FROM order_items
+UNION ALL
+SELECT 'Payments', COUNT(*) FROM payments;
+
+
+
+
+ 
+
+
+
+  
+
+
+
+
+
+
+
+
