@@ -1,0 +1,60 @@
+-- Basic SQL Queries --
+
+-- Display all products --
+SELECT *
+FROM products;
+
+-- Display products costing more than ₹10,000 --
+SELECT product_id, product_name, price
+FROM products
+WHERE price > 10000;
+
+--  Get users from a particular city --
+SELECT *
+FROM addresses
+WHERE city = 'Chennai';
+
+-- Find products belonging to a particular category --
+SELECT *
+FROM products
+WHERE category_id = 3;
+ 
+-- Sort products by price from highest to lowest --
+SELECT *
+FROM products
+ORDER BY price DESC;
+
+-- Find products that are out of stock --
+SELECT *
+FROM products
+WHERE stock = 0;
+
+  -- Count the total number of users -- 
+  SELECT COUNT(*) AS total_users
+FROM users;
+
+-- Find the cheapest product --
+SELECT *
+FROM products
+ORDER BY price ASC
+LIMIT 1;
+ 
+-- Find orders placed by a particular user --
+SELECT *
+FROM orders
+WHERE user_id = 5;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
